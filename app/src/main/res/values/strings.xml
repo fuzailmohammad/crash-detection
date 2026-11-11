@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Accident Detection Center</string>
+    <string name="protection_active">Protection Shield Active</string>
+    <string name="protection_paused">Protection Shield Paused</string>
+    <string name="emergency_detected">ACCIDENT DETECTED</string>
+    <string name="slide_to_cancel">SLIDE TO CANCEL (I AM SAFE)</string>
+    <string name="send_sos_now">SEND SOS DISPATCH NOW</string>
+    <string name="first_responder_beacon">FIRST RESPONDER MEDICAL BEACON</string>
+    <string name="channel_emergency_name">Accident Emergency Alerts</string>
+    <string name="channel_emergency_desc">High-priority alerts and full-screen sirens for crash events</string>
+    <string name="channel_service_name">Protection Service Status</string>
+    <string name="channel_service_desc">Persistent background monitoring status</string>
+</resources>
+
