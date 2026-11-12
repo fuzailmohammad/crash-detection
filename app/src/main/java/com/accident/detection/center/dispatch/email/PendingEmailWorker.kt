@@ -1,11 +1,8 @@
 package com.accident.detection.center.dispatch.email
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -18,10 +15,9 @@ import java.util.concurrent.TimeUnit
  * Expedited background worker that delivers emergency crash report emails
  * even if device network connectivity dropped during the collision.
  */
-@HiltWorker
-class PendingEmailWorker @AssistedInject constructor(
-    @Assisted private val context: Context,
-    @Assisted workerParams: WorkerParameters
+class PendingEmailWorker(
+    context: Context,
+    workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -45,7 +41,7 @@ class PendingEmailWorker @AssistedInject constructor(
 
             val requestBody = jsonPayload.toRequestBody("application/json; charset=utf-8".toMediaType())
             val request = Request.Builder()
-                .url("https://httpbin.org/post") // Mockable endpoint; in production replace with Resend/SendGrid/SMTP gateway
+                .url("https://httpbin.org/post")
                 .post(requestBody)
                 .build()
 
@@ -84,4 +80,3 @@ class PendingEmailWorker @AssistedInject constructor(
         const val KEY_HTML_CONTENT = "key_html_content"
     }
 }
-

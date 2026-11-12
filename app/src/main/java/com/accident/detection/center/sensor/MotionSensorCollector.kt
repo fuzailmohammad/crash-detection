@@ -46,6 +46,7 @@ class MotionSensorCollector @Inject constructor(
 ) {
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
 
+    private val rawAccelerometer: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val linearAccelerationSensor: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     private val gyroscopeSensor: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     private val pressureSensor: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_PRESSURE)
@@ -82,6 +83,15 @@ class MotionSensorCollector @Inject constructor(
         var latestGyroResultant = 0.0f
         var latestPressureHpa = 1013.25f
 
+        // Gravity vector tracking for devices without hardware linear acceleration or gyroscope
+        var gravityX = 0.0f
+        var gravityY = 0.0f
+        var gravityZ = 9.80665f
+        var prevGravityX = 0.0f
+        var prevGravityY = 0.0f
+        var prevGravityZ = 9.80665f
+        var lastAccelTimestampNs = 0L
+
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
                 if (event == null) return
@@ -99,11 +109,71 @@ class MotionSensorCollector @Inject constructor(
                         )
 
                         val reading = MotionSensorReading(
-                            linearAx = filtered.ax,
-                            linearAy = filtered.ay,
-                            linearAz = filtered.az,
+                            linearAx = filtered.ax / SensorManager.GRAVITY_EARTH,
+                            linearAy = filtered.ay / SensorManager.GRAVITY_EARTH,
+                            linearAz = filtered.az / SensorManager.GRAVITY_EARTH,
                             rawLinearSvmG = filtered.rawSvmGForce,
                             filteredLinearSvmG = filtered.svmGForce,
+                            gyroPitchDegS = latestGyroPitch,
+                            gyroRollDegS = latestGyroRoll,
+                            gyroYawDegS = latestGyroYaw,
+                            gyroResultantDegS = latestGyroResultant,
+                            cabinPressureHpa = latestPressureHpa,
+                            stepDetected = false,
+                            timestampNs = event.timestamp
+                        )
+                        trySend(reading)
+                    }
+
+                    Sensor.TYPE_ACCELEROMETER -> {
+                        val rawX = event.values[0]
+                        val rawY = event.values[1]
+                        val rawZ = event.values[2]
+
+                        // Low-pass filter to isolate gravity (alpha = 0.8)
+                        val alpha = 0.8f
+                        gravityX = alpha * gravityX + (1.0f - alpha) * rawX
+                        gravityY = alpha * gravityY + (1.0f - alpha) * rawY
+                        gravityZ = alpha * gravityZ + (1.0f - alpha) * rawZ
+
+                        // Dynamic linear acceleration (gravity-removed)
+                        val linX = rawX - gravityX
+                        val linY = rawY - gravityY
+                        val linZ = rawZ - gravityZ
+
+                        latestLinearX = linX
+                        latestLinearY = linY
+                        latestLinearZ = linZ
+
+                        val filtered = signalFilter.filterLinearAcceleration(linX, linY, linZ)
+
+                        // If hardware gyroscope is absent, derive angular rate of change from gravity vector
+                        if (gyroscopeSensor == null) {
+                            val nowNs = event.timestamp
+                            val dtSec = if (lastAccelTimestampNs > 0) (nowNs - lastAccelTimestampNs) / 1_000_000_000.0f else 0.02f
+                            lastAccelTimestampNs = nowNs
+                            if (dtSec in 0.001f..0.5f) {
+                                val dGx = gravityX - prevGravityX
+                                val dGy = gravityY - prevGravityY
+                                val dGz = gravityZ - prevGravityZ
+                                val deltaGMag = sqrt(dGx * dGx + dGy * dGy + dGz * dGz)
+                                val angularRateRadS = (deltaGMag / SensorManager.GRAVITY_EARTH) / dtSec
+                                latestGyroResultant = (angularRateRadS * RAD_TO_DEG).coerceIn(0f, 1500f)
+                                prevGravityX = gravityX
+                                prevGravityY = gravityY
+                                prevGravityZ = gravityZ
+                            }
+                        }
+
+                        // Total G-force magnitude: sqrt(rawX^2 + rawY^2 + rawZ^2) / g
+                        val totalSvmG = sqrt(rawX * rawX + rawY * rawY + rawZ * rawZ) / SensorManager.GRAVITY_EARTH
+
+                        val reading = MotionSensorReading(
+                            linearAx = rawX / SensorManager.GRAVITY_EARTH,
+                            linearAy = rawY / SensorManager.GRAVITY_EARTH,
+                            linearAz = rawZ / SensorManager.GRAVITY_EARTH,
+                            rawLinearSvmG = totalSvmG,
+                            filteredLinearSvmG = totalSvmG,
                             gyroPitchDegS = latestGyroPitch,
                             gyroRollDegS = latestGyroRoll,
                             gyroYawDegS = latestGyroYaw,
@@ -170,7 +240,11 @@ class MotionSensorCollector @Inject constructor(
 
     private fun registerSensors(listener: SensorEventListener, delay: Int) {
         val sm = sensorManager ?: return
-        linearAccelerationSensor?.let { sm.registerListener(listener, it, delay) }
+        if (linearAccelerationSensor != null) {
+            sm.registerListener(listener, linearAccelerationSensor, delay)
+        } else if (rawAccelerometer != null) {
+            sm.registerListener(listener, rawAccelerometer, delay)
+        }
         gyroscopeSensor?.let { sm.registerListener(listener, it, delay) }
         pressureSensor?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_NORMAL) }
         stepDetectorSensor?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_FASTEST) }

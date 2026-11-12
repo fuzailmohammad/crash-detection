@@ -74,6 +74,31 @@ class LocationVelocityCollector @Inject constructor(
             .setWaitForAccurateLocation(false)
             .build()
 
+        // Seed immediately with last known location for zero latency
+        try {
+            fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                if (loc != null) {
+                    val speedMps = if (loc.hasSpeed()) loc.speed else 0.0f
+                    val speedKmh = speedMps * MPS_TO_KMH
+                    val snapshot = GpsVelocitySnapshot(
+                        speedKmh = speedKmh,
+                        speedMps = speedMps,
+                        latitude = loc.latitude,
+                        longitude = loc.longitude,
+                        altitudeMeters = loc.altitude,
+                        bearingDegrees = loc.bearing,
+                        horizontalAccuracyMeters = loc.accuracy,
+                        timestampEpochMs = loc.time,
+                        hasValidFix = true
+                    )
+                    _latestLocationState.value = snapshot
+                    trySend(snapshot)
+                }
+            }
+        } catch (e: SecurityException) {
+            // Ignored
+        }
+
         val callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val loc = result.lastLocation ?: return

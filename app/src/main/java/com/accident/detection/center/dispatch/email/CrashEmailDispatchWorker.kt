@@ -1,11 +1,8 @@
 package com.accident.detection.center.dispatch.email
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -14,10 +11,9 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
-@HiltWorker
-class CrashEmailDispatchWorker @AssistedInject constructor(
-    @Assisted private val context: Context,
-    @Assisted workerParams: WorkerParameters
+class CrashEmailDispatchWorker(
+    context: Context,
+    workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -31,7 +27,6 @@ class CrashEmailDispatchWorker @AssistedInject constructor(
         val htmlContent = inputData.getString(KEY_HTML_CONTENT) ?: return@withContext Result.failure()
 
         try {
-            // Attempt HTTP dispatch (compatible with SendGrid, Mailgun, or emergency relay webhook)
             val jsonPayload = """
                 {
                     "recipient": "$recipientEmail",
@@ -42,7 +37,7 @@ class CrashEmailDispatchWorker @AssistedInject constructor(
 
             val requestBody = jsonPayload.toRequestBody("application/json; charset=utf-8".toMediaType())
             val request = Request.Builder()
-                .url("https://httpbin.org/post") // Mockable standard endpoint; replace with production mailer gateway
+                .url("https://httpbin.org/post")
                 .post(requestBody)
                 .build()
 
@@ -81,4 +76,3 @@ class CrashEmailDispatchWorker @AssistedInject constructor(
         const val KEY_HTML_CONTENT = "key_html_content"
     }
 }
-

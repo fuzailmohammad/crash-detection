@@ -1,10 +1,13 @@
 package com.accident.detection.center.ui.screens.dashboard
 
+import android.content.Context
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.accident.detection.center.data.preferences.UserPreferencesRepository
-import com.accident.detection.center.data.repository.CrashLogRepository
-import com.accident.detection.center.data.repository.EmergencyContactRepository
+import com.accident.detection.center.domain.repository.CrashLogRepository
+import com.accident.detection.center.domain.repository.EmergencyContactRepository
 import com.accident.detection.center.data.repository.PermissionChecker
 import com.accident.detection.center.domain.model.PermissionHealthState
 import com.accident.detection.center.domain.model.SensorTelemetryState
@@ -12,7 +15,9 @@ import com.accident.detection.center.domain.model.UserProfile
 import com.accident.detection.center.domain.model.VehicleMode
 import com.accident.detection.center.sensor.CrashDetectionEngine
 import com.accident.detection.center.sensor.CrashEventPayload
+import com.accident.detection.center.service.AccidentMonitoringService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -46,6 +51,7 @@ sealed class SimulationScenario(val label: String, val description: String) {
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val preferencesRepository: UserPreferencesRepository,
     private val contactRepository: EmergencyContactRepository,
     private val crashLogRepository: CrashLogRepository,
@@ -74,13 +80,24 @@ class DashboardViewModel @Inject constructor(
     val triggerEmergencyAlarmEvent: SharedFlow<CrashEventPayload> = _triggerEmergencyAlarmEvent.asSharedFlow()
 
     init {
-        // Automatically start engine if shield is active
+        // Automatically start engine and foreground service if shield is active
         viewModelScope.launch {
             userProfile.collectLatest { profile ->
                 if (profile.isProtectionShieldActive) {
                     crashDetectionEngine.startEngine()
+                    try {
+                        val serviceIntent = Intent(context, AccidentMonitoringService::class.java)
+                        ContextCompat.startForegroundService(context, serviceIntent)
+                    } catch (e: Exception) {
+                        // Background launch restriction fallback
+                    }
                 } else {
                     crashDetectionEngine.stopEngine()
+                    try {
+                        val serviceIntent = Intent(context, AccidentMonitoringService::class.java)
+                        context.stopService(serviceIntent)
+                    } catch (e: Exception) {
+                    }
                 }
             }
         }

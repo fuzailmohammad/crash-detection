@@ -8,11 +8,12 @@ import android.os.Build
 import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.accident.detection.center.CrashDetectionApp
 import com.accident.detection.center.R
 import com.accident.detection.center.data.local.entity.EmergencyContactEntity
 import com.accident.detection.center.data.preferences.UserPreferencesRepository
-import com.accident.detection.center.data.repository.CrashLogRepository
-import com.accident.detection.center.data.repository.EmergencyContactRepository
+import com.accident.detection.center.domain.repository.CrashLogRepository
+import com.accident.detection.center.domain.repository.EmergencyContactRepository
 import com.accident.detection.center.dispatch.call.AutomatedCallManager
 import com.accident.detection.center.dispatch.email.EmailDispatchService
 import com.accident.detection.center.dispatch.location.CrashLocationResolver
@@ -171,8 +172,8 @@ class EmergencyDispatchEngine @Inject constructor(
             }
             val pendingIntent = PendingIntent.getActivity(context, 0, intent, pendingIntentFlags)
 
-            val notification = NotificationCompat.Builder(context, AccidentMonitoringService.CHANNEL_EMERGENCY_ALERTS)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+            val notification = NotificationCompat.Builder(context, CrashDetectionApp.CHANNEL_EMERGENCY_ALERTS)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setContentTitle("🚨 SOS DISPATCHED")
                 .setContentText("Emergency contacts have been alerted with your live GPS location.")
                 .setStyle(

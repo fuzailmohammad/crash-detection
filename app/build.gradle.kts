@@ -113,7 +113,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     // Google Play Services Location
-    implementation(libs.playServicesLocation)
+    implementation(libs.play.services.location)
 
     // WorkManager (Self-healing & fallback alert dispatching)
     implementation(libs.androidx.work.runtime.ktx)

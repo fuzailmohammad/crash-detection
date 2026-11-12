@@ -88,7 +88,7 @@ class PowerGovernor @Inject constructor(
         context.registerReceiver(receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
 
-    private fun recalculatePowerPolicy(batteryPct: Int, tempCelsius: Float, isPlugged: Boolean) {
+    internal fun recalculatePowerPolicy(batteryPct: Int, tempCelsius: Float, isPlugged: Boolean): PowerPolicy {
         val policy = when {
             tempCelsius >= 45.0f -> PowerPolicy.THERMAL_THROTTLED
             isPlugged -> PowerPolicy.ULTRA_PERFORMANCE
@@ -96,6 +96,7 @@ class PowerGovernor @Inject constructor(
             else -> PowerPolicy.BALANCED_MOBILE
         }
         _currentPolicy.value = policy
+        return policy
     }
 }
 

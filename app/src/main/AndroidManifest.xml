@@ -108,7 +108,7 @@
             android:name=".service.AccidentMonitoringService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="location|health|microphone" />
+            android:foregroundServiceType="location|health" />
 
         <!-- 4. Device Reboot & App Update Watchdog Receiver -->
         <receiver

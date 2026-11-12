@@ -191,7 +191,7 @@ private fun ProfileAndMedicalTab(
         item {
             OutlinedTextField(
                 value = fullName,
-                onValueChange = viewModel::setFullName,
+                onValueChange = viewModel::onFullNameChanged,
                 label = { Text("Driver / User Full Name") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = textFieldColors()
@@ -225,7 +225,7 @@ private fun ProfileAndMedicalTab(
                         DropdownMenuItem(
                             text = { Text(bg.label, color = TextPrimary) },
                             onClick = {
-                                viewModel.setBloodGroup(bg)
+                                viewModel.onBloodGroupChanged(bg)
                                 bloodGroupExpanded = false
                             }
                         )
@@ -238,7 +238,7 @@ private fun ProfileAndMedicalTab(
         item {
             OutlinedTextField(
                 value = allergies,
-                onValueChange = viewModel::setAllergies,
+                onValueChange = viewModel::onAllergiesChanged,
                 label = { Text("Allergies (e.g. Penicillin, Peanuts, Latex)") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = textFieldColors()
@@ -249,7 +249,7 @@ private fun ProfileAndMedicalTab(
         item {
             OutlinedTextField(
                 value = medicalConditions,
-                onValueChange = viewModel::setMedicalConditions,
+                onValueChange = viewModel::onMedicalConditionsChanged,
                 label = { Text("Medical Conditions (e.g. Asthma, Diabetes)") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = textFieldColors()
@@ -260,7 +260,7 @@ private fun ProfileAndMedicalTab(
         item {
             OutlinedTextField(
                 value = medications,
-                onValueChange = viewModel::setMedications,
+                onValueChange = viewModel::onMedicationsChanged,
                 label = { Text("Current Medications") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = textFieldColors()
@@ -287,7 +287,7 @@ private fun ProfileAndMedicalTab(
                     }
                     Switch(
                         checked = organDonor,
-                        onCheckedChange = viewModel::setOrganDonor,
+                        onCheckedChange = viewModel::onOrganDonorChanged,
                         colors = SwitchDefaults.colors(checkedThumbColor = EmeraldGreen, checkedTrackColor = EmeraldGreen.copy(alpha = 0.5f))
                     )
                 }
@@ -312,7 +312,7 @@ private fun ProfileAndMedicalTab(
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { viewModel.setSelectedVehicleMode(mode) },
+                            .clickable { viewModel.onVehicleModeChanged(mode) },
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) EmeraldGreen.copy(alpha = 0.15f) else DarkCard
                         ),
@@ -349,8 +349,7 @@ private fun ProfileAndMedicalTab(
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = {
-                    viewModel.saveProfile()
-                    onSaved()
+                    viewModel.saveProfile(onSuccess = onSaved)
                 },
                 enabled = isFormValid,
                 modifier = Modifier
@@ -450,12 +449,12 @@ private fun ContactsManagementTab(
             onConfirm = { name, phone, email, isSms, isCall, isEmail ->
                 viewModel.addContact(
                     name = name,
-                    phoneNumber = phone,
+                    phone = phone,
                     email = email,
-                    isSmsEnabled = isSms,
+                    relationship = "Emergency Contact",
                     isCallEnabled = isCall,
-                    isEmailEnabled = isEmail,
-                    priority = contacts.size + 1
+                    isSmsEnabled = isSms,
+                    isEmailEnabled = isEmail
                 )
                 showAddDialog = false
             }

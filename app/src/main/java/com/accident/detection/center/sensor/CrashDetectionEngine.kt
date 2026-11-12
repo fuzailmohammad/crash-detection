@@ -4,7 +4,7 @@ import android.app.KeyguardManager
 import android.content.Context
 import com.accident.detection.center.data.local.entity.CrashEventLogEntity
 import com.accident.detection.center.data.preferences.UserPreferencesRepository
-import com.accident.detection.center.data.repository.CrashLogRepository
+import com.accident.detection.center.domain.repository.CrashLogRepository
 import com.accident.detection.center.domain.model.CrashDetectionStage
 import com.accident.detection.center.domain.model.SensorTelemetryState
 import com.accident.detection.center.domain.model.VehicleMode
@@ -109,6 +109,9 @@ class CrashDetectionEngine @Inject constructor(
                 }
             }
         }
+
+        // 6. Start Real-time Acoustic Sampling for live decibel HUD
+        acousticCollector.startSampling()
     }
 
     fun stopEngine() {

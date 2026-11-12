@@ -21,10 +21,16 @@ import javax.inject.Singleton
 class PermissionChecker @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val _permissionState = MutableStateFlow(checkAllPermissions())
+    private val _permissionState = MutableStateFlow(computePermissions())
     val permissionState: StateFlow<PermissionHealthState> = _permissionState.asStateFlow()
 
     fun checkAllPermissions(): PermissionHealthState {
+        val updatedState = computePermissions()
+        _permissionState.value = updatedState
+        return updatedState
+    }
+
+    private fun computePermissions(): PermissionHealthState {
         val fineLocation = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -105,7 +111,6 @@ class PermissionChecker @Inject constructor(
             isExactAlarmPermitted = exactAlarmPermitted
         )
 
-        _permissionState.value = updatedState
         return updatedState
     }
 }

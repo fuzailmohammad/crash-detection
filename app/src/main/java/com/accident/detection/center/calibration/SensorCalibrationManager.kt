@@ -13,6 +13,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import com.accident.detection.center.data.preferences.userDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -73,17 +75,15 @@ class SensorCalibrationManager @Inject constructor(
 
     init {
         // Load persisted calibration offsets
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).run {
-            kotlinx.coroutines.launch {
-                val prefs = dataStore.data.first()
-                _currentOffsets.value = CalibrationOffsets(
-                    biasX = prefs[PreferencesKeys.BIAS_X] ?: 0.0f,
-                    biasY = prefs[PreferencesKeys.BIAS_Y] ?: 0.0f,
-                    biasZ = prefs[PreferencesKeys.BIAS_Z] ?: 0.0f,
-                    noiseStdDev = prefs[PreferencesKeys.NOISE_STD_DEV] ?: 0.05f,
-                    isCalibrated = prefs[PreferencesKeys.IS_CALIBRATED] ?: false
-                )
-            }
+        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+            val prefs = dataStore.data.first()
+            _currentOffsets.value = CalibrationOffsets(
+                biasX = prefs[PreferencesKeys.BIAS_X] ?: 0.0f,
+                biasY = prefs[PreferencesKeys.BIAS_Y] ?: 0.0f,
+                biasZ = prefs[PreferencesKeys.BIAS_Z] ?: 0.0f,
+                noiseStdDev = prefs[PreferencesKeys.NOISE_STD_DEV] ?: 0.05f,
+                isCalibrated = prefs[PreferencesKeys.IS_CALIBRATED] ?: false
+            )
         }
     }
 
@@ -256,15 +256,13 @@ class SensorCalibrationManager @Inject constructor(
                     _currentOffsets.value = offsets
 
                     // Persist to DataStore
-                    kotlinx.coroutines.CoroutineScope(Dispatchers.IO).run {
-                        kotlinx.coroutines.launch {
-                            dataStore.edit { p ->
-                                p[PreferencesKeys.BIAS_X] = biasX
-                                p[PreferencesKeys.BIAS_Y] = biasY
-                                p[PreferencesKeys.BIAS_Z] = biasZ
-                                p[PreferencesKeys.NOISE_STD_DEV] = stdDev
-                                p[PreferencesKeys.IS_CALIBRATED] = true
-                            }
+                    kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                        dataStore.edit { p ->
+                            p[PreferencesKeys.BIAS_X] = biasX
+                            p[PreferencesKeys.BIAS_Y] = biasY
+                            p[PreferencesKeys.BIAS_Z] = biasZ
+                            p[PreferencesKeys.NOISE_STD_DEV] = stdDev
+                            p[PreferencesKeys.IS_CALIBRATED] = true
                         }
                     }
 

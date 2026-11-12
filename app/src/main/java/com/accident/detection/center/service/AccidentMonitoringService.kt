@@ -136,16 +136,7 @@ class AccidentMonitoringService : LifecycleService() {
                 fgsTypes = fgsTypes or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
             }
 
-            // 2. Microphone type (for acoustic shock sampling)
-            val hasMic = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.RECORD_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED
-
-            if (hasMic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                fgsTypes = fgsTypes or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-            }
-
-            // 3. Health type
+            // 2. Health type (API 34+)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 fgsTypes = fgsTypes or ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
             }
@@ -163,8 +154,7 @@ class AccidentMonitoringService : LifecycleService() {
                     fgsTypes
                 )
             } catch (e: Exception) {
-                // Fallback to basic startForeground
-                startForeground(SERVICE_NOTIFICATION_ID, initialNotification)
+                android.util.Log.e("AccidentMonitoringService", "Failed to startForeground: ${e.message}")
             }
         } else {
             startForeground(SERVICE_NOTIFICATION_ID, initialNotification)

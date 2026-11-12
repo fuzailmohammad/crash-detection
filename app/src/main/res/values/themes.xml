@@ -10,10 +10,6 @@
         <item name="android:statusBarColor">@color/accent_red_dark</item>
         <item name="android:navigationBarColor">@color/accent_red_dark</item>
         <item name="android:windowBackground">@color/accent_red_dark</item>
-        <item name="android:windowShowWhenLocked">true</item>
-        <item name="android:windowTurnScreenOn">true</item>
-        <item name="android:showWhenLocked">true</item>
-        <item name="android:turnScreenOn">true</item>
     </style>
 </resources>
 

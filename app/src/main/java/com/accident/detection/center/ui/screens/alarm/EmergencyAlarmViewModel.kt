@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.accident.detection.center.data.local.entity.EmergencyContactEntity
 import com.accident.detection.center.data.preferences.UserPreferencesRepository
-import com.accident.detection.center.data.repository.CrashLogRepository
-import com.accident.detection.center.data.repository.EmergencyContactRepository
+import com.accident.detection.center.domain.repository.CrashLogRepository
+import com.accident.detection.center.domain.repository.EmergencyContactRepository
 import com.accident.detection.center.dispatch.EmergencyDispatchEngine
 import com.accident.detection.center.domain.model.CascadeStage
 import com.accident.detection.center.domain.model.ChannelDispatchStatus

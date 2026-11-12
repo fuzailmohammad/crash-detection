@@ -3,7 +3,7 @@ package com.accident.detection.center.ui.screens.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.accident.detection.center.data.local.entity.CrashEventLogEntity
-import com.accident.detection.center.data.repository.CrashLogRepository
+import com.accident.detection.center.domain.repository.CrashLogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
